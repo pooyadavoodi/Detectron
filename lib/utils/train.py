@@ -34,7 +34,7 @@ import numpy as np
 import os
 import re
 
-from caffe2.python import memonger
+from caffe2.python import memonger, net_drawer
 from caffe2.python import workspace
 
 from core.config import cfg
@@ -54,6 +54,13 @@ def train_model():
     if 'final' in checkpoints:
         # The final model was found in the output directory, so nothing to do
         return checkpoints
+
+    if cfg.DRAW_GRAPH:
+        logger.info("Drawing graph in a pdf")
+        graph = net_drawer.GetPydotGraphMinimal(
+            model.net.Proto(),
+            minimal_dependency=True)
+        graph.write_pdf(cfg.DRAW_GRAPH_FILENAME)
 
     setup_model_for_training(model, weights_file, output_dir)
     training_stats = TrainingStats(model)

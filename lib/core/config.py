@@ -941,6 +941,10 @@ __C.EXPECTED_RESULTS_EMAIL = b''
 # specified by DOWNLOAD_CACHE
 __C.DOWNLOAD_CACHE = b'/tmp/detectron-download-cache'
 
+# Dump graph of a model into a PDF
+__C.DRAW_GRAPH = False
+__C.DRAW_GRAPH_FILENAME = b'graph.pdf'
+
 
 # ---------------------------------------------------------------------------- #
 # Cluster options
