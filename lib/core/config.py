@@ -941,6 +941,8 @@ __C.EXPECTED_RESULTS_EMAIL = b''
 # specified by DOWNLOAD_CACHE
 __C.DOWNLOAD_CACHE = b'/tmp/detectron-download-cache'
 
+# Enable NVTX ranges for CUDA profiler
+__C.USE_NVTX = False
 
 # ---------------------------------------------------------------------------- #
 # Cluster options

@@ -86,7 +86,10 @@ def parse_args():
 def main():
     # Initialize C2
     workspace.GlobalInit(
-        ['caffe2', '--caffe2_log_level=0', '--caffe2_gpu_memory_tracking=1']
+        ['caffe2',
+        '--caffe2_log_level=0',
+        '--caffe2_gpu_memory_tracking=1'] +
+        ['--caffe2_use_nvtx'] if cfg.USE_NVTX else []
     )
     # Set up logging and load config options
     logger = setup_logging(__name__)
