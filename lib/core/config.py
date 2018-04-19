@@ -472,6 +472,10 @@ __C.MODEL.RPN_ONLY = False
 # Use 'prof_dag' to get profiling statistics
 __C.MODEL.EXECUTION_TYPE = b'dag'
 
+# Use Caffe2 BenchmarkNet instead of regular nets for training
+# Only works if MODEL.EXECUTION_TYPE is 'simple'
+__C.MODEL.BENCHMARK_NET = False
+
 
 # ---------------------------------------------------------------------------- #
 # RetinaNet options
@@ -586,6 +590,9 @@ __C.SOLVER.LRS = []
 
 # Maximum number of SGD iterations
 __C.SOLVER.MAX_ITER = 40000
+
+# Number of warmup iterations for Caffe2 BenchmarkNet
+__C.SOLVER.BENCHMARK_NET_WARMUP_ITERS = 100
 
 # Momentum to use with SGD
 __C.SOLVER.MOMENTUM = 0.9

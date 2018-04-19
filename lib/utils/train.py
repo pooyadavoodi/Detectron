@@ -59,35 +59,45 @@ def train_model():
     training_stats = TrainingStats(model)
     CHECKPOINT_PERIOD = int(cfg.TRAIN.SNAPSHOT_ITERS / cfg.NUM_GPUS)
 
-    for cur_iter in range(start_iter, cfg.SOLVER.MAX_ITER):
-        training_stats.IterTic()
-        lr = model.UpdateWorkspaceLr(cur_iter, lr_policy.get_lr_at_iter(cur_iter))
-        workspace.RunNet(model.net.Proto().name)
-        if cur_iter == start_iter:
-            nu.print_net(model)
-        training_stats.IterToc()
-        training_stats.UpdateIterStats()
-        training_stats.LogIterStats(cur_iter, lr)
+    # Benchmark training 
+    if cfg.MODEL.BENCHMARK_NET and (cfg.MODEL.EXECUTION_TYPE == 'simple'):
+        workspace.BenchmarkNet(
+            model.net.Proto().name,
+            cfg.SOLVER.BENCHMARK_NET_WARMUP_ITERS,
+            cfg.SOLVER.MAX_ITER,
+            True)
+        model.roi_data_loader.shutdown()
+        return checkpoints
+    else:
+        for cur_iter in range(start_iter, cfg.SOLVER.MAX_ITER):
+            training_stats.IterTic()
+            lr = model.UpdateWorkspaceLr(cur_iter, lr_policy.get_lr_at_iter(cur_iter))
+            workspace.RunNet(model.net.Proto().name)
+            if cur_iter == start_iter:
+                nu.print_net(model)
+            training_stats.IterToc()
+            training_stats.UpdateIterStats()
+            training_stats.LogIterStats(cur_iter, lr)
 
-        if (cur_iter + 1) % CHECKPOINT_PERIOD == 0 and cur_iter > start_iter:
-            checkpoints[cur_iter] = os.path.join(
-                output_dir, 'model_iter{}.pkl'.format(cur_iter)
-            )
-            nu.save_model_to_weights_file(checkpoints[cur_iter], model)
+            if (cur_iter + 1) % CHECKPOINT_PERIOD == 0 and cur_iter > start_iter:
+                checkpoints[cur_iter] = os.path.join(
+                    output_dir, 'model_iter{}.pkl'.format(cur_iter)
+                )
+                nu.save_model_to_weights_file(checkpoints[cur_iter], model)
 
-        if cur_iter == start_iter + training_stats.LOG_PERIOD:
-            # Reset the iteration timer to remove outliers from the first few
-            # SGD iterations
-            training_stats.ResetIterTimer()
+            if cur_iter == start_iter + training_stats.LOG_PERIOD:
+                # Reset the iteration timer to remove outliers from the first few
+                # SGD iterations
+                training_stats.ResetIterTimer()
 
-        if np.isnan(training_stats.iter_total_loss):
-            logger.critical('Loss is NaN, exiting...')
-            model.roi_data_loader.shutdown()
-            envu.exit_on_error()
+            if np.isnan(training_stats.iter_total_loss):
+                logger.critical('Loss is NaN, exiting...')
+                model.roi_data_loader.shutdown()
+                envu.exit_on_error()
 
-    # Save the final model
-    checkpoints['final'] = os.path.join(output_dir, 'model_final.pkl')
-    nu.save_model_to_weights_file(checkpoints['final'], model)
+        # Save the final model
+        checkpoints['final'] = os.path.join(output_dir, 'model_final.pkl')
+        nu.save_model_to_weights_file(checkpoints['final'], model)
     # Shutdown data loading threads
     model.roi_data_loader.shutdown()
     return checkpoints
